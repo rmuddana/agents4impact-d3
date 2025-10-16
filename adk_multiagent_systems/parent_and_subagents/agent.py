@@ -1,7 +1,7 @@
 import os
 import sys
 import logging
-
+import requests
 sys.path.append("..")
 from callback_logging import log_query_to_model, log_model_response
 from dotenv import load_dotenv
@@ -11,7 +11,7 @@ from google.genai import types
 from typing import Optional, List, Dict
 
 from google.adk.tools.tool_context import ToolContext
-from location import get_coordinates
+from parent_and_subagents.location import get_coordinates
 
 load_dotenv()
 
@@ -21,14 +21,14 @@ cloud_logging_client.setup_logging()
 # Tools (add the tool here when instructed)
 
 
-def get_pollen_data(api_key: str, city: str, state: str, days=5: int) -> dict:
+def get_pollen_data(city: str, state: str, days: int = 5) -> dict:
     """
     Fetch pollen forecast data for given city, state and past days.
 
     Returns:
         Dictionary containing pollen data
     """
-
+    api_key = "AIzaSyBL9jG-kFKuEmlYQPLPbGHmNINkdVXTw4M"
     #print(f"Fetching location data for location {city}, {state})")
     latitude, longitude = get_coordinates(city, state)
     #print(f"Fetched location({latitude}, {longitude}) for city: {city}, state: {state}")
