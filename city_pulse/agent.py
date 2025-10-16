@@ -2,6 +2,7 @@ import os
 import logging
 
 from dotenv import load_dotenv
+from google.adk.agents import SequentialAgent
 # from google.adk.agents import SequentialAgent
 from google.adk.agents.llm_agent import Agent
 from google.adk.tools import ToolContext
@@ -52,42 +53,66 @@ def append_to_state(
     return {"status": "success"}
 
 
+insight_generator_agent = Agent(
+    name="insight_generator_agent",
+    description="Summarizes and generates insights from 311 search results.",
+    instruction="""
+    INSTRUCTIONS:
+    Your goal is to summarize and generate insights from the 311 search results in the '311_query_results' field.
+    Store your insights in the 'insights' field using the 'append_to_state' tool.
+    """,
+    tools=[append_to_state],
+)
+
 data_query_agent = Agent(
     name="data_query_agent",
     description="Queries 311 data for a specific concern type.",
     instruction="""
     INSTRUCTIONS:
-    Your goal is to query 311 data for concern types matching the user's PROMPT: { PROMPT? }
+    Your goal is to query 311 data for concern types matching the user's PROMPT: { concern_type? }
     - use the bigquery_toolset to query the 311 data
     - Use the 'append_to_state' tool to write your query results to the field '311_query_results'.
     """,
     tools=[bigquery_toolset, append_to_state],
 )
 
-# workflow_agent = SequentialAgent(
-#     name="311_workflow_agent",
-#     description="End-to-end workflow for querying 311 data, correlating with census data, generating insights, and visualizing results.",
-#     sub_agents=[
-#         data_query_agent,
-#         insight_generator_agent,
-#         mapper_agent,
-#     ],
-# )
+workflow_agent = SequentialAgent(
+    name="workflow_agent",
+    description="End-to-end workflow for querying 311 data, correlating with census data, generating insights, and visualizing results.",
+    sub_agents=[
+        data_query_agent,
+        insight_generator_agent,
+        # mapper_agent,
+    ],
+)
 
 root_agent = Agent(
     name="greeter",
     model=model_name,
     description="Guides user in discovering insights from 311 data.",
     instruction="""
-    - Let the user know that you can help them recognize patterns and insights from 311 data across San Francisco.
+    You are CityPulse, a highly specialized and friendly Local Government Agency Data Analyst for the cities of 
+    San Jose, CA and San Francisco, CA.
+    Your primary goal is to generate insightful, actionable, and hyper-local data intelligence and strategic 
+    suggestions for local government officials. Your core mission is to help reduce service-level and health disparities by focusing analysis on traditionally under-served and at-risk communities within your jurisdictions.
+    
+    Data Sources & Core Mandate
+    Your analysis must synthesize data from disparate sources to uncover new trends, highlight disparities, and provide 
+    public health agencies and operations managers with practical, targeted interventions.
+
+    Required Data Inputs:
+    - 311 Service Request Data (Source: Big Query/City Data Archives)
+
+    Instructions:
+    - Let the user know that you can help them recognize patterns and insights from 311 data across San Francisco and San Jose.
     - Ask them if they have a specific concern type in mind or if they want to explore general insights.
     - When they respond, use the 'append_to_state' tool to store the user's response
       in the 'concern_type' state key and transfer to the 'data_query_agent' agent
+    - Once control is returned to the 'greeter' agent, present the insights stored in the `insights` state key.
     """,
     generate_content_config=types.GenerateContentConfig(
         temperature=0,
     ),
     tools=[append_to_state],
-    # sub_agents=[workflow_agent],
-    sub_agents=[data_query_agent],
+    sub_agents=[workflow_agent],
 )
