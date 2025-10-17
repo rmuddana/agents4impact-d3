@@ -23,7 +23,9 @@ credentials_config = BigQueryCredentialsConfig(
 
 # Define a tool configuration to block any write operations
 tool_config = BigQueryToolConfig(write_mode=WriteMode.BLOCKED)
-
+generate_content_config = types.GenerateContentConfig(
+    temperature=0,
+)
 
 # Instantiate a BigQuery toolset
 bigquery_toolset = BigQueryToolset(
@@ -56,6 +58,9 @@ def append_to_state(
 insight_generator_agent = Agent(
     name="insight_generator_agent",
     description="Summarizes and generates insights from 311 search results.",
+    generate_content_config=types.GenerateContentConfig(
+        temperature=0,
+    ),
     instruction="""
     INSTRUCTIONS:
     Your goal is to summarize and generate insights from the 311 search results in the '311_query_results' field.
@@ -67,6 +72,9 @@ insight_generator_agent = Agent(
 data_query_agent = Agent(
     name="data_query_agent",
     description="Queries 311 data for a specific concern type.",
+    generate_content_config=types.GenerateContentConfig(
+        temperature=0,
+    ),
     instruction="""
     INSTRUCTIONS:
     Your goal is to query 311 data for concern types matching the user's PROMPT: { concern_type? }
