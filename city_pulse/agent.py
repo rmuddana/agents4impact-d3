@@ -16,6 +16,7 @@ from city_pulse.location import get_coordinates
 load_dotenv()
 
 model_name = os.getenv("MODEL")
+api_key = os.getenv("API_KEY")
 print(model_name)
 
 application_default_credentials, _ = google.auth.default()
@@ -44,7 +45,6 @@ def get_pollen_data(city: str, state: str, days: int = 5) -> dict:
     Returns:
         Dictionary containing pollen data
     """
-    api_key = "AIzaSyBL9jG-kFKuEmlYQPLPbGHmNINkdVXTw4M"
     #print(f"Fetching location data for location {city}, {state})")
     latitude, longitude = get_coordinates(city, state)
     #print(f"Fetched location({latitude}, {longitude}) for city: {city}, state: {state}")
